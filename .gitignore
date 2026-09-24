@@ -47,3 +47,5 @@ next-env.d.ts
 /work/
 # Pitch deck, video, and working media are submitted separately from the app source.
 /submission/
+AGENTS.md
+CLAUDE.md

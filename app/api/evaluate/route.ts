@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { inspectContent } from "@/lib/firewall";
 import { fixtures } from "@/lib/fixtures";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export function GET() {
   const cases = fixtures.map(fixture => {

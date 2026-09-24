@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { inspectContent, isSource } from "@/lib/firewall";
 import { runProtectedAgentDemo } from "@/lib/protected-agent";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   let input: unknown;

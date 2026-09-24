@@ -6,6 +6,12 @@ const [command, ...args] = process.argv.slice(2);
 if (!["dev", "build"].includes(command)) throw new Error("Expected dev or build.");
 const managedLinux = readExecutionProfile() === "managed-linux";
 
+if (process.env.VERCEL) {
+  const result = spawnSync("npx", ["next", command, ...args], { stdio: "inherit" });
+  if (result.error) throw result.error;
+  process.exit(result.status ?? 0);
+}
+
 if (managedLinux && command === "build") {
   const result = spawnSync("bash", [
     fileURLToPath(new URL("./build-verified.sh", import.meta.url)), ...args,
