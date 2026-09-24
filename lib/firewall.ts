@@ -98,7 +98,10 @@ function normalize(value: string): string {
 function isDiscussion(text: string): boolean {
   const hasDiscussionFrame = /\b(?:explain|analy[sz]e|classify|identify|training (?:note|slide|example)|case study|incident review|tutorial example|documentation|security tip|quotes?|quoted|illustrative|fictional|placeholder|warning sign|must not be followed|never (?:print|enter|follow)|do not obey|not an action request)\b/i.test(text);
   const hasCommandFrame = /\b(?:assistant:|assistant workflow|system update|assistant_next_action|crawler directive|when summarizing|if an? AI assistant reads|for the rest of this session)\b/i.test(text);
-  return hasDiscussionFrame && !hasCommandFrame;
+  // A benign-sounding label must not silence a later operational command on
+  // the same line (for example, "Training note: ... Ignore prior rules").
+  const hasOperationalClause = /(?:^|[.!?;:,]\s*)(?:assistant[,:]\s*)?(?:please\s+|you (?:must|should|need to)\s+)?(?:ignore|disregard|forget|override|bypass|discard|reveal|print|output|include|expose|read|retrieve|share|send|dump|call|invoke|execute|run|enter|provide|submit|type|store|remember|decode|follow)\b/i.test(text);
+  return hasDiscussionFrame && !hasCommandFrame && !hasOperationalClause;
 }
 
 function units(text: string): { text: string; start: number; end: number }[] {

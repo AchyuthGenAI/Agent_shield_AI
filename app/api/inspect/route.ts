@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { inspectContent, isSource } from "@/lib/firewall";
+import { runProtectedAgentDemo } from "@/lib/protected-agent";
 
 export const runtime = "edge";
 
@@ -14,5 +15,7 @@ export async function POST(request: NextRequest) {
   if (content.length > 50_000) return NextResponse.json({ error: "Content is too long. Keep it below 50,000 characters." }, { status: 413 });
   if (!isSource(source)) return NextResponse.json({ error: "Choose a supported source." }, { status: 400 });
 
-  return NextResponse.json(inspectContent(content, source), { headers: { "Cache-Control": "no-store" } });
+  const inspection = inspectContent(content, source);
+  const protectedAgent = runProtectedAgentDemo(inspection.safeHandoff);
+  return NextResponse.json({ ...inspection, protectedAgent }, { headers: { "Cache-Control": "no-store" } });
 }

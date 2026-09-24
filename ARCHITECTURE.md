@@ -2,7 +2,7 @@
 
 ## Problem and outcome
 
-The protected agent must not treat text from a user message, retrieved page, document, email, tool response, code, or image as a replacement for its own instructions. PromptGuard is inserted between intake and agent context. It returns a reviewable decision and a safe handoff string; there is no downstream agent call in this prototype.
+The protected agent must not treat text from a user message, retrieved page, document, email, tool response, code, or image as a replacement for its own instructions. PromptGuard is inserted between intake and agent context. It returns a reviewable decision and a safe handoff string. A deterministic extractive briefing demonstrates the downstream boundary; it is not an LLM agent or an external tool call.
 
 ```mermaid
 flowchart LR
@@ -17,6 +17,8 @@ flowchart LR
   H --> G
   F -->|Quarantine| I[No handoff]
   F --> J[Findings and stage trace]
+  G --> K[Deterministic protected briefing]
+  I -->|No source text| K
 ```
 
 ## Process flow and key decisions
@@ -25,11 +27,12 @@ flowchart LR
 2. **Normalize.** The server normalizes Unicode compatibility forms, removes zero-width characters, decodes common HTML entities, and checks candidate Base64, URL-encoded, and ROT13 text. Decoded instructions are analyzed in addition to visible text. The original input is retained only within the request so evidence spans can be related back to it.
 3. **Inspect.** Reviewable rules recognize nine attack categories: instruction override, role change, secret extraction, tool abuse, credential theft, context poisoning, multi-step jailbreak, encoded instructions, and indirect prompt injection. The local instruction-intent model is a compact binary text classifier trained on 30 synthetic attack and 30 benign phrases at startup. It supplies a second signal for agent-directed commands and can flag a strong unmatched candidate for review. The model uses word and bigram frequencies; no remote model or secret key is needed. Clearly framed educational discussion is treated differently from operational directions.
 4. **Decide.** Findings carry category, reason, evidence, span, severity, confidence, and inspection layer. The highest severity, distinct attack categories, and external-source boundary determine a bounded risk score. Content with no findings is allowed. When findings exist, flagged spans are removed. If high-risk content leaves almost nothing useful, the entire input is quarantined. Otherwise the safe remainder is allowed through as sanitized content.
-5. **Handoff.** Allowed or sanitized text is wrapped as JSON data with an explicit untrusted-content instruction. For quarantine, `safeHandoff` is null. The integration contract requires the protected agent to receive only this field, never the raw content. The UI shows the result, evidence, stage trace, and a downloadable JSON report for review.
+5. **Handoff and protected demo.** Allowed or sanitized text is wrapped as JSON data with an explicit untrusted-content instruction. For quarantine, `safeHandoff` is null. The inspection endpoint calls the deterministic briefing with only this server-created field, never the raw `content`. The briefing extracts at most three passages from the approved text; on quarantine it receives zero characters and returns a blocked state. This simulates an agent's trusted input boundary but does not call a language model, browse, use tools, or generate a semantic summary. The UI shows the result, evidence, stage trace, protected briefing, and a downloadable JSON report for review.
 
 ## Trust boundaries
 
 - The browser is an intake and extraction surface. The server's `/api/inspect` response is authoritative for the decision.
+- The browser cannot submit a handoff to the protected demo. The endpoint creates it from the inspection result on the server and invokes `runProtectedAgentDemo(inspection.safeHandoff)`.
 - Content from web pages, PDFs, emails, documents, API results, OCR, and code is lower-trust data. Its source label is provided by the trusted caller, never inferred from instructions within the content.
 - The endpoint does not execute tool calls, browse attacker URLs, read system prompts, or access credentials. Detection examples use fictional markers and `.invalid` domains.
 - The app does not intentionally persist payloads or reports. JSON reports are generated in the user's browser on request. A production agent should add authentication, source provenance, rate limits, privacy review, and independent tool authorization appropriate to its deployment.
@@ -44,6 +47,7 @@ flowchart LR
 | Inspection endpoint | `app/api/inspect/route.ts` | Validate input and return an inspection without storage |
 | Firewall | `lib/firewall.ts` | Normalization, decoded variants, findings, risk, redaction, handoff |
 | Intent model | `lib/intent-model.ts` | Local statistical instruction-intent signal |
+| Protected demo | `lib/protected-agent.ts` | Fixed extractive briefing from the server-created safe handoff only |
 | Fixture evaluator | `lib/fixtures.ts`, `app/api/evaluate/route.ts` | Repeatable attack and benign demonstrations |
 | Browser agent tool | `app/page.tsx` | Optional WebMCP `inspect_content` action using the same API and visible state |
 

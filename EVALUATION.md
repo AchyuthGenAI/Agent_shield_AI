@@ -12,6 +12,10 @@
 
 This is a **fixture check, not a real-world accuracy estimate**. The sample is small and intentionally constructed. It proves the demo paths work; it does not establish D2-level reliability. The model training phrases and evaluation fixtures are separate lists, but they share the same attack themes.
 
+## Protected handoff checks
+
+`npm run test:boundary` checks the server-side boundary after each change. It confirms the 18 curated fixtures still behave as expected, an operational command remains detectable even when a same-line "training note" label precedes it, the protected demo sees only the sanitized remainder, and quarantine gives it no text. These are regression checks for the demonstrated flow, not a security certification.
+
 ## Manual input checks
 
 - **PDF:** The supplied 14-page hackathon brief was extracted in the browser (16,457 characters) and assigned source `pdf`.
@@ -21,7 +25,7 @@ This is a **fixture check, not a real-world accuracy estimate**. The sample is s
 
 ## Reproduce locally
 
-Run `npm run dev`, open the printed URL, and use the **Coverage** tab. For an API check, request `/api/evaluate` and inspect `metrics` and `cases`. Use the **Inspect** tab to test new material and download its JSON report.
+Run `npm run dev`, open the printed URL, and use the **Coverage** tab. For an API check, request `/api/evaluate` and inspect `metrics` and `cases`. Run `npm run test:boundary` for the protected-flow regression checks. Use the **Inspect** tab to test new material and download its JSON report.
 
 ## Gaps to address before production
 

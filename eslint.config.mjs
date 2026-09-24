@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Browser runtime assets are vendored bundles, not application source.
+    "public/ocr/**",
+    "public/pdf.worker.min.mjs",
+    "vendor/**",
   ]),
   {
     files: ["components/ui/**/*.{ts,tsx}", "hooks/use-mobile.ts"],
