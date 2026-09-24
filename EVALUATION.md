@@ -14,7 +14,7 @@ This is a **fixture check, not a real-world accuracy estimate**. The sample is s
 
 ## Protected handoff checks
 
-`npm run test:boundary` checks the server-side boundary after each change. It confirms the 18 curated fixtures still behave as expected, an operational command remains detectable even when a same-line "training note" label precedes it, the protected demo sees only the sanitized remainder, and quarantine gives it no text. These are regression checks for the demonstrated flow, not a security certification.
+`npm run test:boundary` checks the server-side boundary after each change. Its six checks confirm the 18 curated fixtures still behave as expected, an operational command remains detectable even when a same-line "training note" label precedes it, the protected analyst answers only from the sanitized remainder, quarantine gives it no text, a trusted question changes the evidence selected, and it declines questions without supporting evidence. These are regression checks for the demonstrated flow, not a security certification.
 
 ## Manual input checks
 
