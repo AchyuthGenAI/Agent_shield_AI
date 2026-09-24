@@ -6,7 +6,7 @@ PromptGuard is a working prompt injection firewall for the second ET AI Hackatho
 
 1. Open the app and choose **Inspect**.
 2. Paste text or upload a PDF, DOCX, image, email, Markdown, HTML, JSON, code, or text file.
-3. Choose **Inspect content**. Review the decision, evidence, safe handoff, and the protected workflow's extractive brief.
+3. Enter a question for the protected analyst, then choose **Inspect content**. Review the decision, safe handoff, cited answer, and read-only tool steps.
 4. Use **Coverage** for one attack and one benign lookalike per attack category. **Architecture** explains the handoff path.
 
 For a quick demonstration, try **Hidden web instruction** and **Clean document** in the input panel. The former is intercepted; the latter passes. Uploads are converted to text in the browser, including OCR for images and scanned PDF pages. The extracted text is sent to this app's own inspection API. No inspection content is intentionally persisted.
@@ -27,10 +27,10 @@ Open the local URL printed by the server. For a production build, run `npm run b
 `POST /api/inspect` accepts JSON:
 
 ```json
-{"source":"web","content":"The material to inspect"}
+{"source":"web","content":"The material to inspect","question":"What changed?"}
 ```
 
-The response includes `decision` (`allow`, `sanitize`, or `quarantine`), `risk`, `modelScore`, `findings`, `sanitizedText`, `safeHandoff`, a stage-by-stage trace, and `protectedAgent`. The server computes the protected demo from `safeHandoff` only. It is a deterministic extractive briefing with no LLM, tools, or external data source. An integrator connecting a real model must pass only `safeHandoff` when it is non-null. `GET /api/evaluate` runs the curated fixture checks. Source labels must be set by the trusted integration, not accepted from untrusted retrieved content.
+The response includes `decision` (`allow`, `sanitize`, or `quarantine`), `risk`, `modelScore`, `findings`, `sanitizedText`, `safeHandoff`, a stage-by-stage trace, and `protectedAgent`. The server runs a local tool-based analyst from `safeHandoff` only. It indexes approved passages, searches for evidence relevant to the trusted user's question, and composes an extractive answer with citations. Quarantined content is never sent to those tools. This is a real bounded workflow, but it does not call an LLM or an external service. An integrator connecting a model must pass only `safeHandoff` when it is non-null. `GET /api/evaluate` runs the curated fixture checks. Source labels and the question must be set by the trusted integration, not accepted from untrusted retrieved content.
 
 Browsers that support WebMCP also expose an `inspect_content` tool, which uses the same API and updates the visible workspace. Browsers without WebMCP use the normal interface.
 

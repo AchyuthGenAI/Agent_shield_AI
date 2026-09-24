@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Bot, Check, ChevronRight, ClipboardCheck, Copy, Download, FileText, LockKeyhole, ShieldCheck, ShieldX, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,8 +22,8 @@ const examples: { label: string; source: Source; content: string }[] = [
 
 type InspectionResult = Inspection & { protectedAgent: ProtectedAgentDemo };
 
-async function requestInspection(source: Source, content: string): Promise<InspectionResult> {
-  const response = await fetch("/api/inspect", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ source, content }) });
+async function requestInspection(source: Source, content: string, question: string): Promise<InspectionResult> {
+  const response = await fetch("/api/inspect", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ source, content, question }) });
   const data = await response.json() as InspectionResult & { error?: string };
   if (!response.ok) throw new Error(data.error || "Inspection could not be completed.");
   return data;
@@ -31,6 +32,7 @@ async function requestInspection(source: Source, content: string): Promise<Inspe
 export default function Home() {
   const [source, setSource] = useState<Source>("web");
   const [content, setContent] = useState("");
+  const [question, setQuestion] = useState("What are the key facts?");
   const [result, setResult] = useState<InspectionResult | null>(null);
   const [working, setWorking] = useState(false);
   const [error, setError] = useState("");
@@ -47,15 +49,17 @@ export default function Home() {
     const lifecycle = new AbortController();
     void Promise.resolve(context.registerTool({
       name: "inspect_content", title: "Inspect content", description: "Inspect untrusted incoming text before an AI agent sees it and update the visible firewall decision.",
-      inputSchema: { type: "object", properties: { source: { type: "string", enum: sources.map(item => item.id) }, content: { type: "string", minLength: 1, maxLength: 50000 } }, required: ["source", "content"], additionalProperties: false },
+      inputSchema: { type: "object", properties: { source: { type: "string", enum: sources.map(item => item.id) }, content: { type: "string", minLength: 1, maxLength: 50000 }, question: { type: "string", maxLength: 240 } }, required: ["source", "content"], additionalProperties: false },
       annotations: { readOnlyHint: false, untrustedContentHint: true },
       async execute(input: unknown) {
         if (!input || typeof input !== "object") throw new Error("Source and content are required.");
-        const candidate = input as { source?: unknown; content?: unknown };
+        const candidate = input as { source?: unknown; content?: unknown; question?: unknown };
         if (typeof candidate.source !== "string" || !sources.some(item => item.id === candidate.source) || typeof candidate.content !== "string" || !candidate.content.trim() || candidate.content.length > 50000) throw new Error("Provide a valid source and 1–50,000 characters of content.");
+        if (candidate.question !== undefined && (typeof candidate.question !== "string" || candidate.question.length > 240)) throw new Error("Keep the analyst question below 240 characters.");
         const source = candidate.source as Source;
-        const result = await requestInspection(source, candidate.content);
-        setSource(source); setContent(candidate.content); setResult(result); setError(""); setTab("inspect");
+        const taskQuestion = candidate.question ?? "What are the key facts?";
+        const result = await requestInspection(source, candidate.content, taskQuestion as string);
+        setSource(source); setContent(candidate.content); setQuestion(taskQuestion as string); setResult(result); setError(""); setTab("inspect");
         return { decision: result.decision, risk: result.risk, categories: [...new Set(result.findings.map(item => item.category))], safeHandoff: result.safeHandoff };
       },
     }, { signal: lifecycle.signal })).catch(() => { /* Browser support is optional. */ });
@@ -66,7 +70,7 @@ export default function Home() {
     if (!content.trim()) { setError("Paste some content to inspect first."); return; }
     setWorking(true); setError(""); setResult(null);
     try {
-      setResult(await requestInspection(source, content));
+      setResult(await requestInspection(source, content, question));
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Inspection could not be completed."); }
     finally { setWorking(false); }
   }
@@ -112,25 +116,29 @@ export default function Home() {
           {importStatus && <p className="import-status" role="status">{importStatus}</p>}
           <div className="field-header content-label"><label htmlFor="content-input">Content to inspect</label><span>{content.length.toLocaleString()} / 50,000</span></div>
           <Textarea id="content-input" className="content-input" value={content} onChange={event => { setContent(event.target.value); if (result) setResult(null); }} placeholder="Paste a message, retrieved page, document text, or tool response here..." maxLength={50000} />
+          <div className="field-header task-label"><label htmlFor="analyst-question">Your question for the protected analyst</label><span>Trusted task</span></div>
+          <Input id="analyst-question" className="task-input" value={question} onChange={event => { setQuestion(event.target.value); if (result) setResult(null); }} placeholder="What are the key facts?" maxLength={240} />
+          <p className="task-help">The analyst answers from approved source text only. Instructions inside the source cannot change your question.</p>
           <div className="examples"><span className="examples-label">TRY AN EXAMPLE</span><div className="example-buttons">{examples.map(example => <button type="button" className="example-chip" key={example.label} onClick={() => loadExample(example)}>{example.label}<ChevronRight size={14} /></button>)}</div></div>
           {error && <p className="error-message" role="alert">{error}</p>}
           <Button className="inspect-button" onClick={inspect} disabled={working || !content.trim()}>{working ? "Inspecting…" : "Inspect content"}<ArrowRight size={17} /></Button>
         </div></section>
         <section className="panel result-panel" aria-labelledby="result-heading"><div className="panel-heading"><div className="heading-icon result-icon"><ClipboardCheck size={19} /></div><div><p className="panel-kicker">STEP 02</p><h2 id="result-heading">Firewall decision</h2></div></div>
-          {!result ? <div className="empty-result"><div className="empty-orbit"><ShieldCheck size={36} strokeWidth={1.6} /></div><h3>Ready to inspect</h3><p>Your decision, evidence, and safe handoff will appear here after inspection.</p><div className="empty-flow"><span>Incoming content</span><ArrowRight size={15} /><span>Firewall</span><ArrowRight size={15} /><span>Protected demo</span></div></div> : <div className="result-body" aria-live="polite">
+          {!result ? <div className="empty-result"><div className="empty-orbit"><ShieldCheck size={36} strokeWidth={1.6} /></div><h3>Ready to inspect</h3><p>Your decision, evidence, and safe handoff will appear here after inspection.</p><div className="empty-flow"><span>Incoming content</span><ArrowRight size={15} /><span>Firewall</span><ArrowRight size={15} /><span>Protected analyst</span></div></div> : <div className="result-body" aria-live="polite">
             <div className={`decision-card decision-${result.decision}`}><div className="decision-icon">{result.decision === "allow" ? <Check size={24} /> : result.decision === "quarantine" ? <ShieldX size={24} /> : <ShieldCheck size={24} />}</div><div><span className="decision-label">{result.decision === "allow" ? "SAFE TO PASS" : result.decision === "sanitize" ? "SANITIZED" : "QUARANTINED"}</span><h3>{result.decision === "allow" ? "Content can proceed" : result.decision === "sanitize" ? "Unsafe text removed" : "Handoff stopped"}</h3><p>{result.summary}</p></div><span className="risk-score">Risk {result.risk}/99</span></div>
             <div className="result-section"><div className="section-heading"><h3>What we found</h3><span>{result.findings.length} signals</span></div>{result.findings.length ? <div className="finding-list">{result.findings.map((finding, index) => <div className="finding" key={`${finding.category}-${index}`}><span className="finding-marker" /><div><strong>{finding.category}</strong><p>{finding.reason}</p><code>{finding.evidence}</code></div></div>)}</div> : <p className="quiet-note">No malicious instructions detected in this content.</p>}</div>
-            <div className="result-section"><div className="section-heading"><h3>Protected handoff</h3></div><p className="handoff-explainer">{result.safeHandoff ? "Only this bounded content reaches the protected demo below." : "Nothing reaches the protected demo while this content is quarantined."}</p><pre className="handoff-preview">{result.safeHandoff ?? "Handoff blocked"}</pre></div>
+            <div className="result-section"><div className="section-heading"><h3>Protected handoff</h3></div><p className="handoff-explainer">{result.safeHandoff ? "Only this bounded content reaches the protected analyst below." : "Nothing reaches the protected analyst while this content is quarantined."}</p><pre className="handoff-preview">{result.safeHandoff ?? "Handoff blocked"}</pre></div>
             <div className="result-actions"><Button size="sm" variant="outline" onClick={copyHandoff} disabled={!result.safeHandoff}><Copy size={14} />{copied ? "Copied" : "Copy safe text"}</Button><Button size="sm" variant="outline" onClick={downloadReport}><Download size={14} />Download report</Button></div>
             <div className="stage-list">{result.stages.map(stage => <div key={stage.name}><span className={stage.status === "alert" ? "stage-dot alert" : "stage-dot"} /><strong>{stage.name}</strong><span>{stage.detail}</span></div>)}</div>
           </div>}
         </section>
       </div>
       {result && <section className="panel downstream-panel" aria-labelledby="downstream-heading" aria-live="polite">
-        <div className="panel-heading"><div className="heading-icon downstream-icon"><Bot size={19} /></div><div><p className="panel-kicker">STEP 03</p><h2 id="downstream-heading">Protected workflow</h2></div><span className="demo-badge">DETERMINISTIC DEMO</span></div>
-        <div className="downstream-body"><div className="downstream-context"><h3>{result.protectedAgent.status === "blocked" ? "The boundary held" : "Approved content reached the demo"}</h3><p>This extractive briefing simulates the next agent step. It receives only the server-approved handoff. No language model, external tool, or private data source is connected.</p><div className="received-count"><LockKeyhole size={15} /><span>{result.protectedAgent.receivedCharacters.toLocaleString()} approved characters received</span></div></div>
-          <div className={`downstream-output ${result.protectedAgent.status === "blocked" ? "downstream-output-blocked" : ""}`}><span className="output-kicker">EXTRACTIVE BRIEF</span>{result.protectedAgent.status === "blocked" ? <><h3>Briefing stopped</h3><p>The firewall withheld this input, so the protected workflow had no source text to read.</p></> : result.protectedAgent.status === "empty" ? <><h3>No usable passage</h3><p>The handoff contained no passage long enough for a brief.</p></> : <><h3>From the approved source</h3><ul>{result.protectedAgent.passages.map((passage, index) => <li key={`${index}-${passage.slice(0, 20)}`}>{passage}</li>)}</ul></>}</div>
+        <div className="panel-heading"><div className="heading-icon downstream-icon"><Bot size={19} /></div><div><p className="panel-kicker">STEP 03</p><h2 id="downstream-heading">Protected analyst</h2></div><span className="demo-badge">LOCAL TOOL WORKFLOW</span></div>
+        <div className="downstream-body"><div className="downstream-context"><h3>{result.protectedAgent.status === "blocked" ? "The boundary held" : result.protectedAgent.status === "empty" ? "No supported answer" : "Question answered from approved content"}</h3><p>The server runs a read-only evidence search for your question. It receives only the firewall-approved handoff and cites the passages it uses. No external model or private data source is connected.</p><div className="received-count"><LockKeyhole size={15} /><span>{result.protectedAgent.receivedCharacters.toLocaleString()} approved characters received</span></div></div>
+          <div className={`downstream-output ${result.protectedAgent.status === "blocked" ? "downstream-output-blocked" : ""}`}><span className="output-kicker">GROUNDED ANSWER</span><h3>{result.protectedAgent.question}</h3><p className="analyst-answer">{result.protectedAgent.answer}</p>{result.protectedAgent.evidence.length > 0 && <div className="analyst-evidence"><strong>Evidence from approved text</strong><ul>{result.protectedAgent.evidence.map(item => <li key={item.reference}><span>[{item.reference}]</span> {item.text}</li>)}</ul></div>}</div>
         </div>
+        <div className="analyst-trace"><span>READ-ONLY TOOL STEPS</span>{result.protectedAgent.toolTrace.map(step => <div key={step.name}><strong>{step.name}</strong><p>{step.detail}</p></div>)}</div>
       </section>}
       <div className="trust-strip"><span><ShieldCheck size={16} /> Multi-stage inspection</span><span><ClipboardCheck size={16} /> Clear, reviewable decisions</span><span><LockKeyhole size={16} /> No content stored</span></div></TabsContent>
       <TabsContent value="coverage"><CoveragePanel onTry={tryFixture} /></TabsContent>

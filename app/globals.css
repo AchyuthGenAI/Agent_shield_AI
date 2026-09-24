@@ -37,6 +37,9 @@ h1 span { color:#66809e; }
 .content-label { margin-top:24px; }
 .content-input { min-height:180px; max-height:360px; resize:vertical; border-color:#dce5ef; border-radius:10px; padding:14px 15px; background:#fbfdff; font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace; }
 .content-input::placeholder { color:#97a6b5; }
+.task-label { margin-top:19px; }
+.task-input { height:42px; border-color:#dce5ef; border-radius:9px; background:#fbfdff; font-size:13px; }
+.task-help { margin:8px 0 0; color:#8494a5; font-size:11px; line-height:1.5; }
 .examples { margin-top:20px; }
 .examples-label { color:#8a9bab; font-size:11px; font-weight:800; letter-spacing:.13em; }
 .example-buttons { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
@@ -111,6 +114,16 @@ h1 span { color:#66809e; }
 .downstream-output p { margin:0; color:#708296; font-size:13px; line-height:1.55; }
 .downstream-output ul { display:grid; gap:8px; margin:9px 0 0; padding-left:18px; color:#3e566b; font-size:13px; line-height:1.5; overflow-wrap:anywhere; }
 .downstream-output li::marker { color:#4b9b91; }
+.downstream-output .analyst-answer { color:#324e66; font-size:13px; line-height:1.65; overflow-wrap:anywhere; }
+.analyst-evidence { margin-top:16px; padding-top:13px; border-top:1px solid #e1eaf1; }
+.analyst-evidence strong { color:#5d758a; font-size:11px; }
+.analyst-evidence ul { margin-top:7px; padding-left:0; list-style:none; color:#708296; font-size:11px; }
+.analyst-evidence li span { color:#167e84; font-weight:800; }
+.analyst-trace { display:flex; flex-wrap:wrap; gap:10px; padding:0 27px 22px; }
+.analyst-trace > span { width:100%; color:#8b9bab; font-size:10px; font-weight:800; letter-spacing:.13em; }
+.analyst-trace > div { flex:1; min-width:180px; padding:10px 12px; border:1px solid #e4ebf2; border-radius:8px; background:#fbfdff; }
+.analyst-trace strong { font-size:11px; color:#506b85; }
+.analyst-trace p { margin:3px 0 0; color:#8b9baa; font-size:11px; line-height:1.4; }
 .detail-surface { padding:29px; border:1px solid #dce5ef; border-radius:18px; background:#fff; box-shadow:0 6px 30px rgba(25,59,96,.035); }
 .detail-title { display:flex; align-items:flex-start; gap:14px; }
 .detail-kicker { display:block; margin:0 0 4px; color:#2b78cf; font-size:10px; font-weight:800; letter-spacing:.14em; }
