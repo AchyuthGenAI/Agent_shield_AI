@@ -1,5 +1,5 @@
 {
-  "name": "site-creator-vinext-starter",
+  "name": "promptguard-studio",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -9,7 +9,7 @@
     "install:ci": "node scripts/install-ci.mjs",
     "dev": "next dev",
     "dev:vinext": "node scripts/run-framework.mjs dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "build:vinext": "node scripts/run-framework.mjs build",
     "start": "next start",
     "start:vinext": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js dev --config dist/server/wrangler.json --local --persist-to .wrangler/state --ip 127.0.0.1 --inspector-port 0",

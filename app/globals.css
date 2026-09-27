@@ -9,10 +9,13 @@ body { margin:0; background:var(--background); color:var(--foreground); font-fam
 button { cursor:pointer; }
 .app-shell { min-height:100vh; background:radial-gradient(circle at 51% -24%,#ddecff 0,transparent 43%),#f6f9fc; }
 .site-header { height:72px; padding:0 max(32px,calc((100vw - 1280px)/2)); background:#fff; border-bottom:1px solid #e5ebf2; display:flex; align-items:center; justify-content:space-between; }
-.brand { display:flex; align-items:center; gap:10px; color:#142236; font-size:19px; font-weight:760; letter-spacing:-.055em; }
+.brand { display:flex; align-items:center; gap:10px; color:#142236; font-size:19px; font-weight:760; letter-spacing:-.055em; text-decoration:none; }
 .brand-period { color:#1681f4; }
 .brand-mark { width:35px; height:35px; border-radius:11px; background:#0c3567; color:#fff; display:grid; place-items:center; }
 .header-right { display:flex; align-items:center; gap:24px; }
+.header-home-link { color:#58728b; font-size:12px; font-weight:680; text-decoration:none; }
+.header-home-link:hover { color:#155db2; }
+.header-home-link:focus-visible,.brand:focus-visible { outline:3px solid #9acaff; outline-offset:4px; border-radius:4px; }
 .header-caption { color:#8090a2; font-size:11px; font-weight:700; letter-spacing:.14em; }
 .privacy-pill { display:flex; align-items:center; gap:7px; padding:8px 11px; border:1px solid #dce8f6; border-radius:99px; color:#457397; background:#f7fbff; font-size:12px; font-weight:600; }
 .main-content { width:min(1280px,calc(100% - 64px)); margin:0 auto; padding:45px 0 34px; }

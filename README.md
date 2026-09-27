@@ -4,12 +4,12 @@ PromptGuard is a working prompt injection firewall for the second ET AI Hackatho
 
 ## Try it
 
-1. Open the app and choose **Inspect**.
+1. Open the home page and choose **Enter the studio**. The home page also has three short samples you can inspect immediately.
 2. Paste text or upload a PDF, DOCX, image, email, Markdown, HTML, JSON, code, or text file.
 3. Enter a question for the protected analyst, then choose **Inspect content**. Review the decision, safe handoff, cited answer, and read-only tool steps.
-4. Use **Coverage** for one attack and one benign lookalike per attack category. **Architecture** explains the handoff path.
+4. Use **History** to search, reopen, or delete past inspections. **Coverage** has one attack and one benign lookalike per category. **Architecture** explains the handoff path.
 
-For a quick demonstration, try **Hidden web instruction** and **Clean document** in the input panel. The former is intercepted; the latter passes. Uploads are converted to text in the browser, including OCR for images and scanned PDF pages. The extracted text is sent to this app's own inspection API. No inspection content is intentionally persisted.
+For a quick demonstration, try **Hidden web instruction** and **Clean document** in the input panel. The former is intercepted; the latter passes. Uploads are converted to text in the browser, including OCR for images and scanned PDF pages. The extracted text is sent to this app's own inspection API. The site saves the latest 100 inspections run from the studio or home-page demo in this browser's IndexedDB so they can be reopened without an account. It does not send history to a separate account or history server. Users can delete one record or clear them all in the History tab; clearing browser site data also removes them.
 
 ## Run locally
 
@@ -20,7 +20,11 @@ npm ci
 npm run dev
 ```
 
-Open the local URL printed by the server. For a production build, run `npm run build`.
+Open the local URL printed by the server. The home page is at `/` and the inspection workspace is at `/studio`; neither requires an account. For a production build, run `npm run build`.
+
+## Deploy on Vercel
+
+Import `AchyuthGenAI/Agent_shield_AI` from GitHub and deploy its `main` branch. Select the **Next.js** framework preset and keep the root directory at `./`. The repository's `build` script runs `next build --webpack`; no build or output-directory override is needed. This app does not require environment variables, an external API key, or a database. Inspection history uses each visitor's browser storage, so it is not shared across devices.
 
 ## API
 

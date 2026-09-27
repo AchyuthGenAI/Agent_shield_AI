@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./home.css";
+import "./studio/studio.css";
 
 export const metadata: Metadata = {
   title: "PromptGuard Studio — Prompt Injection Firewall",
-  description: "Inspect untrusted content, neutralize prompt injections, and review a safe handoff before an AI agent sees it.",
+  description: "See the trust boundary between external content and an AI workflow. Inspect prompt injections, review decisions, and try the working PromptGuard Studio.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
